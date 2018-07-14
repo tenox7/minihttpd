@@ -2,14 +2,14 @@ CC=gcc
 CFLAGS=-O2 -Wall
 
 # build
-all: receive 
+all: upload 
 
-receive: receive.o cgic.o
-	gcc -o receive receive.o cgic.o 
-	strip receive
+upload: upload.o cgic.o
+	gcc -o upload upload.o cgic.o 
+	strip upload
 
-receive.o:receive.c
+upload.o: upload.c
 cgic.o: cgic.c cgic.h
 
 clean:
-	rm -f *.o receive
+	rm -f *.o upload

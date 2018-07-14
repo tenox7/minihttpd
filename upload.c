@@ -15,7 +15,7 @@
 
 #include "cgic.h"
 
-#define UPLOAD_DIR "/home/ftp"
+#define UPLOAD_DIR "/tmp"
 
 
 void error(char *msg, ...) {
@@ -27,7 +27,7 @@ void error(char *msg, ...) {
     va_end(ap);
 
     cgiHeaderContentType("text/plain");
-    fprintf(cgiOut, "Error: %s : %s [%d]", buff, strerror(errno), errno);
+    fprintf(cgiOut, "Error: %s\n%s [%d]\n", buff, strerror(errno), errno);
 
     exit(0);
 }
@@ -105,7 +105,7 @@ int cgiMain(void) {
 
         output=fopen(fullfilename, "w");
         if(!output) 
-                error("Unable to open file %s for writing", basename);
+                error("Unable to open file %s for writing", fullfilename);
 
         while(cgiFormFileRead(input, buff, sizeof(buff), &got) == cgiFormSuccess) 
             if(got)
