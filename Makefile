@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O2 -Wall
+CFLAGS=-O2 -Wall -DCGIMAXTEMPFILESIZE=5242880
 
 # build
 all: upload 
