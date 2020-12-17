@@ -1,6 +1,7 @@
 //
 // Receive File Handler for multipart/form-data HTTP POST / HTML Form File Uploads
 // Copyright (c) 1994-2017 Antoni Sawicki
+// Copyright (c) 2020 Google LLC
 //
 
 #include <stdio.h>
