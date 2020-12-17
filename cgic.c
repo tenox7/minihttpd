@@ -4,9 +4,10 @@
 /* Used only in Unix environments, in conjunction with mkstemp(). 
 	Elsewhere (Windows), temporary files go where the tmpnam() 
 	function suggests. If this behavior does not work for you, 
-	modify the getTempFileName() function to suit your needs. */
+	modify the getTempFile() function to suit your needs. */
 
 #define cgicTempDir "/tmp"
+#define cgicMaxTempSize 1073741824
 
 #if CGICDEBUG
 #define CGICDEBUGSTART \
@@ -436,7 +437,7 @@ static void decomposeValue(char *value,
 	char **argValues,
 	int argValueSpace);
 
-static cgiParseResultType getTempFileName(FILE **tFile);
+static cgiParseResultType getTempFile(FILE **tFile);
 
 static cgiParseResultType cgiParsePostMultipartInput() {
 	cgiParseResultType result;
@@ -528,7 +529,7 @@ static cgiParseResultType cgiParsePostMultipartInput() {
 			Otherwise, store to a memory buffer (it is
 			presumably a regular form field). */
 		if (strlen(ffileName)) {
-			if (getTempFileName(&outf) != cgiParseSuccess) {
+			if (getTempFile(&outf) != cgiParseSuccess) {
 				return cgiParseIO;
 			}	
 		} else {
@@ -624,7 +625,7 @@ outOfMemory:
 return cgiParseMemory;
 }
 
-static cgiParseResultType getTempFileName(FILE **tFile)
+static cgiParseResultType getTempFile(FILE **tFile)
 {
 	/* tfileName must be 1024 bytes to ensure adequacy on
 		win32 (1024 exceeds the maximum path length and
@@ -758,12 +759,10 @@ cgiParseResultType afterNextBoundary(mpStreamPtr mpp, FILE *outf, char **outP,
 			/* Not presently in the middle of a boundary
 				match; just emit the character. */
 			BAPPEND(d[0]);
-		}	
-#ifdef CGIMAXTEMPFILESIZE
-		if(outLen >= CGIMAXTEMPFILESIZE) {
+		}
+		if(outLen > cgicMaxTempSize) {
 			goto outOfMemory;
 		}
-#endif
 	}
 	/* Read trailing newline or -- EOF marker. A literal EOF here
 		would be an error in the input stream. */
@@ -1813,7 +1812,7 @@ void cgiHeaderCookieSetInteger(char *name, int value, int secondsToLive,
 {
 	char svalue[256];
 	sprintf(svalue, "%d", value);
-	cgiHeaderCookieSetString(name, svalue, secondsToLive, path, domain);
+	cgiHeaderCookieSet(name, svalue, secondsToLive, path, domain, 0);
 }
 
 static char *days[] = {
@@ -1841,8 +1840,8 @@ static char *months[] = {
 	"Dec"
 };
 
-void cgiHeaderCookieSetString(char *name, char *value, int secondsToLive,
-	char *path, char *domain)
+void cgiHeaderCookieSet(char *name, char *value, int secondsToLive,
+	char *path, char *domain, int options)
 {
 	/* cgic 2.02: simpler and more widely compatible implementation.
 		Thanks to Chunfu Lai. 
@@ -1861,7 +1860,7 @@ void cgiHeaderCookieSetString(char *name, char *value, int secondsToLive,
 	then = now + secondsToLive;
 	gt = gmtime(&then);
 	fprintf(cgiOut, 
-		"Set-Cookie: %s=%s; domain=%s; expires=%s, %02d-%s-%04d %02d:%02d:%02d GMT; path=%s\r\n",
+		"Set-Cookie: %s=%s; domain=%s; expires=%s, %02d-%s-%04d %02d:%02d:%02d GMT; path=%s%s%s%s\r\n",
 		name, value, domain, 
 		days[gt->tm_wday],
 		gt->tm_mday,
@@ -1870,7 +1869,16 @@ void cgiHeaderCookieSetString(char *name, char *value, int secondsToLive,
 		gt->tm_hour,
 		gt->tm_min,
 		gt->tm_sec,
-		path);
+		path,
+		((options & cgiCookieSecure) ? "; Secure" : ""),
+		((options & cgiCookieHttpOnly) ? "; HttpOnly" : ""),
+		((options & cgiCookieSameSiteStrict) ? "; SameSite=Strict" : ""));
+}
+
+void cgiHeaderCookieSetString(char *name, char *value, int secondsToLive,
+	char *path, char *domain)
+{
+	cgiHeaderCookieSet(name, value, secondsToLive, path, domain, 0);
 }
 
 void cgiHeaderLocation(char *redirectUrl) {
@@ -2165,7 +2173,7 @@ cgiEnvironmentResultType cgiReadEnvironment(char *filename) {
 			FILE *out = NULL;
 			int got;
 			int len = e->valueLength;
-			if (getTempFileName(&out)
+			if (getTempFile(&out)
 				!= cgiParseSuccess || !out)
 			{
 				result = cgiEnvironmentIO;
