@@ -25,34 +25,37 @@ func msg(w http.ResponseWriter, out string, err error, code int) {
 	log.Print(m)
 }
 
+func handle(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(10 << 20)
+	w.Header().Set("Content-Type", "text/html")
+	f, h, err := r.FormFile("file")
+	if err != nil {
+		fmt.Fprintf(w, "<HTML><BODY>\n<FORM ACTION=\"/\" METHOD=\"POST\" ENCTYPE=\"multipart/form-data\">\n"+
+			"<INPUT TYPE=\"FILE\" NAME=\"file\"><INPUT TYPE=\"SUBMIT\" NAME=\"Upload\" VALUE=\"Upload\">\n"+
+			"</FORM></BODY></HTML>\n",
+		)
+		log.Printf("request from: %v URI: %v", r.RemoteAddr, r.RequestURI)
+		return
+	}
+	defer f.Close()
+	o, err := os.OpenFile(filepath.Join(*dir, filepath.Base(h.Filename)), os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		msg(w, "unable to open destination file", err, http.StatusBadRequest)
+		return
+	}
+	defer o.Close()
+	oS, err := io.Copy(o, f)
+	if err != nil {
+		msg(w, "unable to copy destination file", err, http.StatusBadRequest)
+		return
+	}
+	msg(w, fmt.Sprintf("received file: %v size: %v remote: %v", o.Name(), oS, r.RemoteAddr), fmt.Errorf("ok"), http.StatusOK)
+}
+
 func main() {
 	flag.Parse()
 	log.Printf("Starting http listener: %v", *addr)
-	if err := http.ListenAndServe(*addr, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.ParseMultipartForm(10 << 20)
-		w.Header().Set("Content-Type", "text/html")
-		f, h, err := r.FormFile("file")
-		if err != nil {
-			fmt.Fprintf(w, "<HTML><BODY>\n<FORM ACTION=\"/\" METHOD=\"POST\" ENCTYPE=\"multipart/form-data\">\n"+
-				"<INPUT TYPE=\"FILE\" NAME=\"file\"><INPUT TYPE=\"SUBMIT\" NAME=\"Upload\" VALUE=\"Upload\">\n"+
-				"</FORM></BODY></HTML>\n",
-			)
-			return
-		}
-		defer f.Close()
-		o, err := os.OpenFile(filepath.Join(*dir, filepath.Base(h.Filename)), os.O_RDWR|os.O_CREATE, 0644)
-		if err != nil {
-			msg(w, "unable to open destination file", err, http.StatusBadRequest)
-			return
-		}
-		defer o.Close()
-		oS, err := io.Copy(o, f)
-		if err != nil {
-			msg(w, "unable to copy destination file", err, http.StatusBadRequest)
-			return
-		}
-		msg(w, fmt.Sprintf("received file: %v size: %v remote: %v", o.Name(), oS, r.RemoteAddr), fmt.Errorf("ok"), http.StatusOK)
-	})); err != nil {
+	if err := http.ListenAndServe(*addr, http.HandlerFunc(handle)); err != nil {
 		log.Fatalf("unable to start http server: %v", err)
 	}
 }
