@@ -1,5 +1,5 @@
 # upload
-Simple HTTP Form File Uploader
+Simple HTTP Form File Upload Handler
 
 ## usage
 

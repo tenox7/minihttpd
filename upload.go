@@ -1,4 +1,4 @@
-// Simple HTTP Form File Uploader
+// Simple HTTP Form File Upload Handler
 // Copyright (c) 2022 by Google LLC
 // Fo upload file:
 // $ curl -F 'file=@myfile' http://...
