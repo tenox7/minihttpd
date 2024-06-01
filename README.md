@@ -1,8 +1,9 @@
-# upload
-Simple HTTP Form File Upload Handler
+# mini http
+
+simple http server with form based file upload
 
 ## usage
 
 ```
-$ curl -F "name=@<yourfile.dat>" http://....
+$ curl -F "name=@<yourfile.dat>" http://.../upload
 ```
