@@ -1,3 +1,3 @@
-module github.com/tenox7/upload
+module github.com/tenox7/minihttpd
 
 go 1.19
