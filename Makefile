@@ -1,3 +1,5 @@
-all:
-	GOOS=linux GOARCH=amd64 go build -a -o minihttpd-amd64 .
-	GOOS=linux GOARCH=arm64 go build -a -o minihttpd-arm64 .
+docker:
+	docker buildx build --platform linux/amd64,linux/arm64 -t tenox7/minihttpd:latest --load .
+
+clean:
+	docker buildx prune -a -f

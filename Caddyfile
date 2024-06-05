@@ -1,0 +1,15 @@
+{
+	order upload before file_server
+}
+
+:80 {
+	root * /www
+	header Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+	file_server {
+		browse /index.tmpl
+	}
+	upload /upload POST {
+		dest_dir_field_name dir
+		file_field_name file
+	}
+}

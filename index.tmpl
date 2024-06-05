@@ -1,0 +1,22 @@
+<html>
+    <head><title>UniSrv {{html .Path}}</title></head>
+    <body>
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <input type="hidden" name="dir" value="{{html .Path}}">
+            <input type="submit" value="Upload">
+        </form>
+        <pre>curl -F file=@yourfile.dat -F dir=hostpath/ http://{{.Host}}/upload</pre>
+        <hr>
+        <p>{{range $i, $crumb := .Breadcrumbs}}<a href="{{html $crumb.Link}}">{{html $crumb.Text}}</a>{{if ne $i 0}}/{{end}}{{end}}</p>
+        <table>
+            <tr><td><a href="..">..</a></td><td>&lt;dir&gt;</td></tr>
+                {{range .Items}}
+                <tr>
+                    <td><a href="{{html .URL}}">{{html .Name}}</a></td>
+                    <td> {{if .IsDir}} &lt;dir&gt; {{else}} {{.HumanSize}} {{end}}</td>
+                </tr>
+                {{end}}
+        </table>
+    </body>
+</html>

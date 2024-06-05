@@ -1,17 +1,11 @@
-# mini http
+# Mini HTTPD with Form Upload
 
-simple http server with form based file upload
+A mini web server with added form based file upload. Serve single directory for in/out.
 
-## usage
+This time uses Caddy server and packaged as a Docker container.
 
-### server
-
-```sh
-./minihttpd -port :8080 -path /tmp
-```
-
-### client
+To run:
 
 ```sh
-$ curl -F "name=@<yourfile.dat>" http://.../upload
+docker run -d -v /some/directory:/www -p 80:80 tenox7/minihttpd:latest
 ```
